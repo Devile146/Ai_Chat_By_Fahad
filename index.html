@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>AI CHAT BY TECHNICAL FAHAD</title>
+  <style>
+    body {
+      margin:0; font-family:Arial,Helvetica,sans-serif;
+      min-height:100vh; display:flex; flex-direction:column;
+      color:#fff;
+      background: linear-gradient(-45deg, #0f0f0f, #1a1a2e, #16213e, #0f3460);
+      background-size: 400% 400%;
+      animation: bgmove 12s ease infinite;
+    }
+    @keyframes bgmove {
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
+    }
+
+    header {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:15px; background:rgba(17,17,17,0.8);
+      border-bottom:2px solid #444;
+    }
+    header h1 {
+      font-size:22px; margin:0;
+      background: linear-gradient(270deg,#ff4b1f,#ff9068,#ffd200,#00c6ff,#0072ff,#00ff87);
+      background-size:400% 400%;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: rainbow 6s linear infinite;
+    }
+    @keyframes rainbow {
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
+    }
+
+    .clear-btn {
+      display:flex; flex-direction:column; align-items:center;
+      cursor:pointer; color:#ff4444;
+      transition: transform 0.2s ease;
+    }
+    .clear-btn:hover { transform: scale(1.1); }
+    .clear-btn i { font-size:22px; margin-bottom:3px; }
+    .clear-btn small { font-size:12px; }
+
+    #chat-box {
+      flex:1; padding:15px; overflow-y:auto;
+      display:flex; flex-direction:column; gap:10px;
+    }
+
+    .msg {
+      max-width:80%; padding:10px 14px; border-radius:12px;
+      position:relative; font-size:15px; background:#111;
+      color:#fff; z-index:0;
+    }
+    .msg::before {
+      content:""; position:absolute; inset:0; border-radius:12px;
+      padding:2px; background:linear-gradient(90deg,#ff4b1f,#ff9068,#ffd200,#00c6ff,#0072ff,#00ff87);
+      background-size:400% 400%; animation:borderflow 6s linear infinite;
+      -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+      -webkit-mask-composite:xor; mask-composite:exclude;
+      z-index:-1;
+    }
+    @keyframes borderflow {
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
+    }
+    .msg.user { align-self:flex-end; }
+    .msg.bot { align-self:flex-start; }
+
+    #input-area {
+      display:flex; padding:10px; background:rgba(17,17,17,0.8); border-top:2px solid #444;
+    }
+    #user-input {
+      flex:1; padding:10px; border:none; border-radius:8px;
+      transition: transform 0.2s ease;
+    }
+    #user-input:focus {
+      animation: spring 0.4s ease;
+      outline:none;
+    }
+    @keyframes spring {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.08); }
+      60%  { transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+
+    button {
+      margin-left:8px; padding:10px 16px; border:none; border-radius:8px;
+      cursor:pointer;
+      background:linear-gradient(90deg,#ff4b1f,#ff9068,#ffd200);
+      color:#000; font-weight:bold;
+    }
+
+    footer {
+      text-align:center; padding:8px; background:rgba(17,17,17,0.8); font-size:14px;
+    }
+    .contact-btn {
+      display:inline-block; margin-top:5px;
+      font-size:16px; font-family:cursive;
+      background:linear-gradient(90deg,#00c6ff,#0072ff,#00ff87);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      border:none; cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AI CHAT BY TECHNICAL FAHAD</h1>
+    <div class="clear-btn" onclick="clearChat()">
+      <i>✖</i>
+      <small>Clear Chat</small>
+    </div>
+  </header>
+
+  <div id="chat-box"></div>
+
+  <div id="input-area">
+    <input id="user-input" placeholder="Type your message..."/>
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <footer>
+    Made with ❤️ by TECHNICAL FAHAD <br>
+    <a 
+      href="https://wa.me/923251138959?text=Hello%20Sir%20Your%20Ai%20Is%20Best%20And%20Usefull%20%F0%9F%A5%B0%20Thanks%20To%20Giving%20Us%20%F0%9F%98%8A" 
+      target="_blank">
+      <button class="contact-btn">CONTACT</button>
+    </a>
+  </footer>
+
+  <!-- Updated script for Vercel backend -->
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const userInput = document.getElementById("user-input");
+
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      appendMessage("user", text);
+      userInput.value = "";
+
+      try {
+        // Call Vercel backend function
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text })
+        });
+
+        const data = await res.json();
+        const reply = data?.reply || "Error: No reply";
+        appendMessage("bot", reply);
+
+      } catch (err) {
+        console.error(err);
+        appendMessage("bot", "Error: Could not reach server");
+      }
+    }
+
+    function appendMessage(role, text) {
+      const div = document.createElement("div");
+      div.className = "msg " + role;
+      div.innerText = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function clearChat() {
+      chatBox.innerHTML = "";
+    }
+  </script>
+</body>
+</html>
